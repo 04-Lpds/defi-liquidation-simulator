@@ -8,8 +8,3 @@ Agent-based simulation of a lending protocol under price shocks.
 - Optional hybrid oracle (delayed API prices + live AMM spot weighting + EMA smoothing)
 - Tracks key risk metrics: pending/stuck debt, liquidation waves, health factor distributions, shortfall
 - Monte Carlo stress testing with scaled price shocks and noise (WIP)
-
-## Setup
-```bash
-pip install -r requirements.txt
-
