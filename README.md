@@ -14,20 +14,22 @@ Agent-based simulation of a lending protocol under price shocks.
 
 ## Project Structure
 
-defi-liquidation-simulator/
-├── amm.py                    # AMM model with slippage
-├── borrowers.py              # Borrower agent logic
-├── config.py                 # Simulation parameters
-├── liquidations.py           # Liquidation mechanics
-├── metrics.py                # Risk metrics calculation
-├── monte_carlo.py            # Main Monte Carlo engine
-├── oracle.py                 # Price oracle (hybrid option)
-├── sim.py                    # Core simulation runner
-├── state.py                  # Simulation state management
-├── analyze_monte_carlo.py    # Post-simulation analysis
-├── price_path_test.py        # Price path testing utility
-├── results/                  # Output directory for simulation results
-└── README.md
+   ```text
+   defi-liquidation-simulator/
+   ├── amm.py                    # AMM model with slippage
+   ├── borrowers.py              # Borrower agent logic
+   ├── config.py                 # Simulation parameters
+   ├── liquidations.py           # Liquidation mechanics
+   ├── metrics.py                # Risk metrics calculation
+   ├── monte_carlo.py            # Main Monte Carlo engine
+   ├── oracle.py                 # Price oracle (hybrid option)
+   ├── sim.py                    # Core simulation runner
+   ├── state.py                  # Simulation state management
+   ├── analyze_monte_carlo.py    # Post-simulation analysis
+   ├── price_path_test.py        # Price path testing utility
+   ├── results/                  # Output directory for simulation results
+   └── README.md
+   ```
 
 
 ## Installation
