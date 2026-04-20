@@ -4,7 +4,7 @@
 
 Agent-based simulation of a lending protocol under price shocks.
 
-## ✨ Features
+## Features
 
 - Multi-asset borrowers with collateral (WETH, WBTC, SOL) and USDC debt
 - Profitability-gated liquidations with realistic AMM slippage
@@ -12,7 +12,7 @@ Agent-based simulation of a lending protocol under price shocks.
 - Comprehensive risk metrics: pending/stuck debt, liquidation waves, health factor distributions, shortfall
 - Monte Carlo stress testing with scaled price shocks and noise (WIP)
 
-## 📁 Project Structure
+## Project Structure
 
 defi-liquidation-simulator/
 ├── amm.py                    # AMM model with slippage
@@ -30,7 +30,7 @@ defi-liquidation-simulator/
 └── README.md
 
 
-## 🚀 Installation
+## Installation
 
 1. Clone the repository:
    ```bash
@@ -46,7 +46,7 @@ defi-liquidation-simulator/
    ```bash
    pip install numpy pandas matplotlib seaborn requests
 
-## 🛠 Usage
+## Usage
 
 Run a basic single simulation: python sim.py
 
@@ -61,7 +61,7 @@ Test price paths (useful for debugging): python price_path_test.py
 All simulation parameters (number of borrowers, collateral ratios, shock magnitude, oracle settings, etc.) are defined in config.py.
 Edit config.py to customize your runs.
 
-## 📈 Roadmap (WIP)
+## Roadmap (WIP)
 
 - Fix state issues in monte_carlo.py 
 - Improve visualization & data for liquidation cascades
