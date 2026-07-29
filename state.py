@@ -13,30 +13,39 @@ def initialize_state(config: Config, borrower_data=None):
     state["ltv"] = np.array([config.ltv[a] for a in state["assets"]])
     state["amm_reserves"] = copy.deepcopy(config.amm_pools)
     state["initial_amm_ratios"] = {}
+
     for pool_key, reserves in state["amm_reserves"].items():
         token_in, token_out = pool_key.split('_')
         if token_out in reserves and token_in in reserves and reserves[token_in] > 0:
             state["initial_amm_ratios"][pool_key] = reserves[token_out] / reserves[token_in]
 
+    # ==================== BORROWER DATA ====================
     if borrower_data is None:
         state["borrower_data"] = copy.deepcopy(config.borrowers)
     else:
-        state["borrower_data"] = borrower_data
+        state["borrower_data"] = copy.deepcopy(borrower_data)   # Important: deep copy here too
 
+    # ==================== HISTORY DICT ====================
     state["history"] = {
         "steps": [],
-        "timestamp": [],
         "liquidations_per_step": [],
         "percent_liquidatable": [],
-        "cumulative_realized_bad_debt": [],
         "pending_bad_debt_per_step": [],
-        "cumulative_pending_bad_debt": [],
-        "total_bad_debt_per_step": [],
         "economic_shortfall_per_step": [],
-        "cumulative_total_bad_debt": [],
-        "seized_usd_cumulative": [],
-        "debt_closed_cumulative": [],
-        "price_main_asset": [],
+        "total_bad_debt_per_step": [],
+        "seized_usd_cumulative": [0.0],
+        "debt_closed_cumulative": [0.0],
+
+        # Price tracking
+        "price_WETH": [], "price_WBTC": [], "price_SOL": [],
+        "api_price_WETH": [], "api_price_WBTC": [], "api_price_SOL": [],
+        "amm_spot_WETH": [], "amm_spot_WBTC": [], "amm_spot_SOL": [],
+
+        # Research scalars
+        "peak_liquidatable_pct": 0.0,
+        "peak_pending_debt": 0.0,
+        "peak_economic_shortfall": 0.0,
+        "cumulative_liquidations": 0,
     }
 
     update_health_factors(state, config)
@@ -50,17 +59,6 @@ def initialize_state(config: Config, borrower_data=None):
 if __name__ == "__main__":
     config = Config()
     state = initialize_state(config)
-
-    bd = state["borrower_data"]
-    hf = bd["health_factor"]
-    hf_finite = hf[np.isfinite(hf)]
-
-    print(f"Initialization complete!")
-    print(f"Price path length: {len(config.price_path)} minutes")   # i.e., should be 1440 (mins/day)
-    print(f"Initial prices: {config.initial_prices}")
-    print(f"\nBorrower stats:")
-    print(f"  Total borrowers: {config.num_borrowers}")
-    print(f"  Median HF: {np.median(hf_finite):.3f}")
-    print(f"  Min HF: {np.min(hf_finite):.3f}")
-    print(f"  % liquidatable at start: {state['liquidatable_mask'].mean() * 100:.2f}%")
-    print(f"  Average total debt USD: {np.mean(np.sum(bd['debt'] * state['oracle_prices'], axis=1)):.0f}")
+    print("State initialization test successful!")
+    print(f"Total borrowers: {len(state['borrower_data']['health_factor'])}")
+    print(f"Median HF: {np.median(state['borrower_data']['health_factor']):.4f}")

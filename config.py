@@ -8,8 +8,8 @@ from datetime import datetime
 class Config:
     # --------------------- General ---------------------
     seed = 43
-    num_borrowers = 5500
-    removal_buffer = 0.02  # optional buffer to remove preemptive large liqs
+    num_borrowers = 12800
+    removal_buffer = 0.01  # optional buffer to remove preemptive large liqs
     #num_runs = 1
     use_heterogeneous_liquidators = False  # Liquidators with different profit targets
     remove_unhealthy_borrowers = True  # Remove all initially liquidatable borrowers before sim proceeds - recommended
@@ -23,8 +23,9 @@ class Config:
 
     """Important: Toggle plot_sim_metrics on/off for PER SIMULATION info & time series; i.e., plots of bad debt, liquidations, etc., per sim run. 
     Also prints bad debt and liquidations to console every print_steps_size steps."""
-    plot_sim_metrics = True
-    print_steps_size = 100  # Print sim info every print_step_size intervals when plot_sim_metrics = True
+    plot_sim_metrics = False # Show plots and sim progress (slow for multiple iterations)
+    print_steps_size = 500  # Print sim info every print_step_size intervals
+    save_charts = False
 
     # --------------------- Assets ---------------------
     # NOTE: FIX SO ASSETS CAN BE CHOSEN/CHANGED JUST FROM HERE
@@ -40,44 +41,47 @@ class Config:
     # --------------------- Oracle ---------------------
     oracle_delay: int = 0  # units: step intervals; i.e., mins (unverified / WIP)
     use_hybrid_oracle: bool = True
-    oracle_amm_weight: float = 0.3
+    oracle_amm_weight: float = 0.0  # β
     oracle_ema_alpha: float = 0.1
-    print("ORACLE CONFIGURATION:")
-    if use_hybrid_oracle:
-        print(f"Oracle AMM weight: {oracle_amm_weight}")
-        print(f"Oracle EMA alpha: {oracle_ema_alpha}\n")
-    else:
-        print("Basic Oracle\n")
+    print("1")
+    if print_config:
+        print("ORACLE CONFIGURATION:")
+        if use_hybrid_oracle:
+            print(f"Oracle AMM weight: {oracle_amm_weight}")
+            print(f"Oracle EMA alpha: {oracle_ema_alpha}\n")
+        else:
+            print("Basic Oracle\n")
 
     # --------------------- Liquidations ---------------------
     default_min_profit_bps = 100  # Default min profit when use_heterogeneous_liquidators = False
-    print(f"Minimum profit bps: {default_min_profit_bps}\n")
+    print(f"Minimum profit bps: {default_min_profit_bps}\n") if print_config else None
     liquidation_threshold = 1.0
     close_factor = 0.5  # plan to make dynamic / per asset
     liquidation_bonus = 0.09  # plan to make dynamic / per asset
-    max_liqs_per_block = 70
+    max_liqs_per_block = 50
 
     # --------------------- AMM ---------------------
     use_rebalancing = True
     rebalance_rate = 0.03  # defend in assumptions
-    rebalance_threshold = 0.03  # rebalance if imbalance > threshold %
-    amm_liquidity_usd_per_pool = 2e8  # per side — tune higher for less slippage (1e8–1e9)
+    rebalance_threshold = 0.03  # rebalances if imbalance > threshold %
+    amm_liquidity_usd_per_pool = 2e8  # per side - tune higher for less slippage (1e8–1e9)
 
-    print("AMM CONFIGURATION:")
-    if use_rebalancing:
-        print(f"AMM rebalance rate: {rebalance_rate}")
-        print(f"Rebalance threshold: {rebalance_threshold}")
-    else:
-        print("Rebalancing off.")
-    print(f"AMM liquidity per pool side: ${amm_liquidity_usd_per_pool:,.0f}")
-    print("=" * 60 + "\n")
+    print("AMM CONFIGURATION:") if print_config else None
+    if print_config:
+        if use_rebalancing:
+            print(f"AMM rebalance rate: {rebalance_rate}")
+            print(f"Rebalance threshold: {rebalance_threshold}")
+        else:
+            print("Rebalancing off.")
+        print(f"AMM liquidity per pool side: ${amm_liquidity_usd_per_pool:,.0f}")
+        print("=" * 60 + "\n")
 
     # --------------------- Historical Price Data ---------------------
     # Choose a day:
     """YYYY-MM-DD : 
-    2022-11-08 / 2022-11-11 / 2022-06-12 / 2022-05-07 / 2025-10-10 / 2025-10-09 / 2026-02-03 / 2026-02-05 / 2026-01-10
+    2022-11-08 / 2022-11-11 / 2022-05-12 / 2022-06-12 / 2022-05-07 / 2025-10-10 / 2025-10-09 / 2026-02-03 / 2026-02-05 / 2026-01-10 / 2026-03-29 / 2026-03-26
     """
-    crisis_date = "2022-11-08"
+    crisis_date = "2022-05-07"
     binance_symbols = {"WETH": "ETHUSDT", "WBTC": "BTCUSDT", "SOL": "SOLUSDT"}  # mapping
 
     # When config is instantiated, fetch prices and initialize balanced pools
@@ -86,14 +90,14 @@ class Config:
         #print(f"Seed used: {np.random.get_state()[1][0]}")  # shows actual seed state
         print(f"Fetching 1-minute prices for {self.crisis_date} from Binance API...")
         self.price_path = self.fetch_minute_prices(self.crisis_date)
-        print(f"Fetched {len(self.price_path)} minutes of data.")
+        #print(f"Fetched {len(self.price_path)} minutes of data.")
 
         # Set initial prices from first row of historical data
         self.initial_prices = self.price_path.iloc[0].to_dict()
 
         # Initialize AMM pools balanced at initial oracle prices
         self.amm_pools = {}
-        print("Initializing AMM pools balanced at initial oracle prices:")
+        #print("Initializing AMM pools balanced at initial oracle prices:")
         for asset in self.assets:
             if asset == 'USDC':
                 continue
@@ -111,10 +115,10 @@ class Config:
             }
 
             spot = usdc_amount / asset_amount if asset_amount > 0 else np.nan
-            print(f"  {pool_key}: {asset}: {asset_amount:,.2f} | USDC: {usdc_amount:,.0f} | "
-                  f"spot: ${spot:.2f} (oracle: ${initial_price:.2f})")
+            #print(f"  {pool_key}: {asset}: {asset_amount:,.2f} | USDC: {usdc_amount:,.0f} | "
+            #      f"spot: ${spot:.2f} (oracle: ${initial_price:.2f})")
 
-        print(f"Generating borrowers data...")
+        #print(f"Generating borrowers data...")
         self.borrowers = self.generate_borrowers()
         # Example: if you have np.random calls
 
@@ -161,6 +165,34 @@ class Config:
         price_df = price_df.ffill()
         price_df["USDC"] = 1.0
         return price_df[Config.assets]
+
+    def reload_price_path(self):
+        """Force reload price data for a new crisis_date"""
+        print(f"Fetching fresh prices for {self.crisis_date}...")
+        self.price_path = self.fetch_minute_prices(self.crisis_date)
+        print(f"Fetched {len(self.price_path)} minutes of data.")
+
+        # Update initial prices
+        self.initial_prices = self.price_path.iloc[0].to_dict()
+
+        # Re-initialize AMM pools with new initial prices
+        self.amm_pools = {}
+        for asset in self.assets:
+            if asset == 'USDC':
+                continue
+            pool_key = f"{asset}_USDC"
+            initial_price = self.initial_prices[asset]
+            usdc_amount = self.amm_liquidity_usd_per_pool
+            asset_amount = usdc_amount / initial_price if initial_price > 0 else 0
+
+            self.amm_pools[pool_key] = {
+                asset: asset_amount,
+                'USDC': usdc_amount,
+                'fee': 0.003
+            }
+
+
+
 
     @staticmethod
     def derive_new_price_path(
@@ -264,13 +296,13 @@ class Config:
         if self.remove_unhealthy_borrowers:
             mask = hf >= self.liquidation_threshold + self.removal_buffer  # optional buffer to avoid early liqs (e.g. 0.01 )
             initial_removed = n_borrowers - np.sum(mask)
-
-            print(
-                f"Removed {initial_removed} / {n_borrowers} "
-                f"initially liquidatable borrowers "
-                f"({initial_removed / n_borrowers:.1%})"
-            )
-            print(f"Remaining borrowers: {np.sum(mask)}. All start healthy")
+            if self.plot_borrower_distributions:
+                print(
+                    f"Removed {initial_removed} / {n_borrowers} "
+                    f"initially liquidatable borrowers "
+                    f"({initial_removed / n_borrowers:.1%})"
+                )
+                print(f"Remaining borrowers: {np.sum(mask)}. All start healthy")
         else:
             mask = np.ones(n_borrowers, dtype=bool)
 
@@ -297,6 +329,38 @@ class Config:
             print("====================================\n")
 
         return borrower_data
+
+
+    def reload_for_new_date(self, new_date: str):
+        """Fully reload price path, AMM pools, and regenerate borrowers for a new date."""
+        self.crisis_date = new_date
+        print(f"Reloading everything for {new_date}...")
+
+        # Reload prices
+        self.price_path = self.fetch_minute_prices(new_date)
+        self.initial_prices = self.price_path.iloc[0].to_dict()
+
+        # Rebuild AMM pools
+        self.amm_pools = {}
+        for asset in self.assets:
+            if asset == 'USDC':
+                continue
+            pool_key = f"{asset}_USDC"
+            initial_price = self.initial_prices[asset]
+            usdc_amount = self.amm_liquidity_usd_per_pool
+            asset_amount = usdc_amount / initial_price if initial_price > 0 else 0
+
+            self.amm_pools[pool_key] = {
+                asset: asset_amount,
+                'USDC': usdc_amount,
+                'fee': 0.003
+            }
+
+        # Regenerate borrowers with new initial prices
+        # print("Regenerating borrowers with new prices...")
+        # self.borrowers = self.generate_borrowers()
+
+        return self
 
 
 if __name__ == "__main__":
